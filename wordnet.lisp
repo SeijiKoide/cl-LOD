@@ -26,7 +26,8 @@
 ;;
 ;; Wheeler Ruml (ruml@eecs.harvard.edu)
 
-(defpackage wordnet)
+(defpackage wordnet
+  (:use common-lisp))
 (in-package wordnet)
 
 ;;;
@@ -187,7 +188,7 @@ and SECOND-PART bound to the rest"
 ;;;;;;;;;;;;;;; macros for accessors that auto-load ;;;;;;;;;;;
 
 (defmacro define-public-accessors (struct (&optional (private-prefix
-						      (str struct "-private-")))
+						      (str struct '#:-private-)))
 				   &rest slots)
   "given a symbol naming a struct, and the symbols naming its slots,
 defines accessor macros which look like the ones DEFSTRUCT would have defined.
@@ -219,7 +220,7 @@ ACCESSOR-NAME returns :placeholder."
 (defmacro define-loading-accessors (struct (loader
 					    &optional (private-prefix
 						       (str struct
-							    "-private-")))
+							    '#:-private-)))
 				    &rest slots)
   "a macro for defining multiple loading accessors."
   `(progn
@@ -233,7 +234,7 @@ ACCESSOR-NAME returns :placeholder."
 
 (defmacro define-public-setfs (struct (&optional (private-prefix
 						  (str struct
-						       "-private-")))
+						       '#:-private-)))
 			       &rest slots)
   "defines setfs for the SLOTS in STRUCT."
   `(progn
@@ -409,12 +410,12 @@ ACCESSOR-NAME returns :placeholder."
 
 (defconstant +all-pos+ '(:noun :verb :adjective :adverb))
 
-(defconstant *wnhome*
-    (or (sys:getenv "WNHOME")
+(defparameter *wnhome*
+    (or #+:allegro (sys:getenv "WNHOME")
         #+:unix "/usr/share/wordnet/"
         #+:mswindow "C:\\Program Files\\WordNet\\2.0"))
-(defconstant *wnsearchdir*
-    (or (sys:getenv "WNSEARCHDIR")
+(defparameter *wnsearchdir*
+    (or #+:allegro (sys:getenv "WNSEARCHDIR")
         #+:unix "/usr/share/wordnet/"
         #+:mswindow (concatenate 'string *wnhome* "\\dict")))
 (defconstant +wordnet-path-default+
@@ -673,6 +674,7 @@ position of its first character"
             (with-list-split-after (* (parse-integer (first rest))
                                       3)
               (frame-stuff gloss-stuff) (rest rest)
+              (declare (ignore frame-stuff))
               ;(map-groups-of 3 (make-frame-loader synset) frame-stuff)
               (setf rest gloss-stuff)))
           (setf (synset-gloss synset)
